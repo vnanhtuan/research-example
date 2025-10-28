@@ -1,0 +1,116 @@
+body {
+    display: flex;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f4f7f6;
+}
+
+/* Cột bên trái (UI Builder) */
+#builder-ui {
+    width: 300px;
+    min-width: 250px;
+    background-color: #ffffff;
+    border-right: 1px solid #dcdcdc;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Phần Tree View */
+#tree-view-wrapper {
+    flex: 1; /* Cho phép co giãn */
+    overflow-y: auto; /* Thêm thanh cuộn khi cần */
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+#tree-view-wrapper h3 {
+    margin-top: 0;
+}
+
+/* Phần Inspector */
+#inspector {
+    padding: 15px;
+    background-color: #fdfdfd;
+}
+
+#inspector p {
+    font-size: 14px;
+    color: #333;
+    margin-top: 0;
+    word-break: break-all;
+}
+
+#inspector button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 14px;
+}
+
+#inspector button:hover {
+    background-color: #0056b3;
+}
+
+/* Vùng Iframe */
+#canvas-wrapper {
+    flex: 1;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: white;
+}
+
+/* === CSS CHO TREE NODE (Mới) === */
+.tree-node {
+    font-size: 14px;
+}
+
+.node-content {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.node-content:hover {
+    background-color: #f0f0f0;
+}
+
+/* CSS cho node đang được chọn */
+.node-content.selected {
+    background-color: #cce5ff;
+    border: 1px solid #b8daff;
+}
+
+.toggle-icon {
+    width: 20px;
+    display: inline-block;
+    text-align: center;
+    font-family: monospace;
+    font-weight: bold;
+    color: #666;
+}
+
+.node-label {
+    margin-left: 4px;
+}
+
+.node-children {
+    /* Vùng con sẽ được thụt vào */
+    margin-left: 20px;
+    border-left: 1px dashed #ccc;
+    padding-left: 10px;
+}

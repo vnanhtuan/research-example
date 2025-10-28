@@ -3,33 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>UX Builder</title>
+    <link rel="stylesheet" href="builder.css">
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <style>
-        /* CSS cho trình builder */
-        body { display: flex; font-family: sans-serif; }
-        #builder-ui { width: 300px; padding: 10px; border-right: 1px solid #ccc; }
-        #canvas-wrapper { flex: 1; }
-        #canvas { width: 100%; height: 90vh; border: none; }
-        
-        /* CSS sẽ được tiêm vào iframe để highlight */
-        .builder-selected {
-            outline: 2px dashed blue !important;
-            box-shadow: 0 0 10px rgba(0,0,255,0.5);
-        }
-    </style>
 </head>
 <body>
-
     <div id="builder-ui">
-        <h3>Tree View</h3>
-        <div id="tree-view">
-            <tree-node 
-                v-for="node in tree" 
-                :key="node.id" 
-                :node="node"
-                @node-selected="selectElementFromTree">
-            </tree-node>
+        <div id="tree-view-wrapper">
+            <h3>Tree View</h3>
+            <div id="tree-view">
+                <tree-node 
+                    v-for="node in tree" 
+                    :key="node.id" 
+                    :node="node"
+                    @node-selected="selectElementFromTree">
+                </tree-node>
+            </div>
         </div>
         
         <hr>

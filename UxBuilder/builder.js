@@ -12,7 +12,6 @@ const app = Vue.createApp({
             selectedElementId: null,
             selectedElementTag: '',
             elementCounter: 0
-            // ... tất cả data của bạn
         }
     },
     methods: {
@@ -95,7 +94,7 @@ const app = Vue.createApp({
          */
         updateTreeSelection(nodes, selectedId) {
             nodes.forEach(node => {
-                Vue.set(node, 'selected', node.id === selectedId);
+                node.selected = (node.id === selectedId);
                 if (node.children.length > 0) {
                     this.updateTreeSelection(node.children, selectedId);
                 }
@@ -141,24 +140,56 @@ const app = Vue.createApp({
 // Register component on App
 app.component('tree-node', {
     props: ['node'],
+    data() {
+        return {
+            isOpen: true // Mặc định mở
+        }
+    },
+    computed: {
+        hasChildren() {
+            return this.node.children && this.node.children.length > 0;
+        }
+    },
     template: `
-        <div style="margin-left: 20px;">
-            <strong 
-                @click.stop="selectNode" 
-                :style="{ 'color': node.selected ? 'blue' : 'black', 'cursor': 'pointer' }">
-                &lt;{{ node.tag }}&gt;
-            </strong>
-            <tree-node
-                v-for="child in node.children"
-                :key="child.id"
-                :node="child"
-                @node-selected="$emit('node-selected', $event)">
-            </tree-node>
+        <div class="tree-node">
+            <!-- Dòng chứa nội dung node (toggle và tên tag) -->
+            <div class="node-content" :class="{ 'selected': node.selected }">
+                <!-- Nút Toggle (chỉ hiển thị nếu có con) -->
+                <span @click.stop="toggleOpen" class="toggle-icon">
+                    <template v-if="hasChildren">
+                        {{ isOpen ? '[-]' : '[+]' }}
+                    </template>
+                    <template v-else>
+                        &bull;
+                    </template>
+                </span>
+
+                <!-- Tên Node (click để chọn) -->
+                <strong @click.stop="selectNode" class="node-label">
+                    &lt;{{ node.tag }}&gt;
+                </strong>
+            </div>
+
+            <!-- Vùng chứa các con (chỉ render nếu isOpen) -->
+            <div class="node-children" v-if="isOpen && hasChildren">
+                <!-- Đệ quy gọi lại chính nó -->
+                <tree-node
+                    v-for="child in node.children"
+                    :key="child.id"
+                    :node="child"
+                    @node-selected="$emit('node-selected', $event)">
+                </tree-node>
+            </div>
         </div>
     `,
     methods: {
         selectNode() {
             this.$emit('node-selected', this.node);
+        },
+        toggleOpen() {
+            if (this.hasChildren) {
+                this.isOpen = !this.isOpen;
+            }
         }
     }
 });
@@ -175,67 +206,64 @@ $(document).ready(function() {
     
     // 1. Load file template.html vào iframe
     $.get('template.html', function(htmlContent) {
-      /**
-     * 1. HÀM NÀY SẼ CHẠY KHI IFRAME LOAD XONG
-     * (Nó sẽ chạy 2 LẦN: một lần cho 'about:blank' và
-     * một lần sau khi chúng ta 'document.write' xong)
-     */
-    $iframe.on('load', function() {
-        const $iframeContents = $iframe.contents();
+        /**
+         * 1. HÀM NÀY SẼ CHẠY KHI IFRAME LOAD XONG
+         * (Nó sẽ chạy 2 LẦN: một lần cho 'about:blank' và
+         * một lần sau khi chúng ta 'document.write' xong)
+         */
+        $iframe.on('load', function() {
+            const $iframeContents = $iframe.contents();
 
-        // Chỉ thực hiện khi iframe CÓ body (tức là sau khi đã write)
-        if ($iframeContents.find('body').length === 0) {
-            return;
-        }
-
-        // 2. Tiêm CSS vào <head>
-        $iframeContents.find('head').append(`
-            <style>
-                .builder-selected {
-                    outline: 2px dashed blue !important;
-                    box-shadow: 0 0 10px rgba(0,0,255,0.5);
-                }
-                body * { cursor: default !important; }
-            </style>
-        `);
-
-        // 3. Gắn listener click vào <body>
-        $iframeContents.find('body').on('click', '*', function(e) {
-            e.stopPropagation();
-            
-            const $clickedElement = $(this);
-            
-            $iframeContents.find('.builder-selected').removeClass('builder-selected');
-            $clickedElement.addClass('builder-selected');
-
-            let id = $clickedElement.attr('data-builder-id');
-            if (!id) {
-                // Chúng ta dùng vueApp vì nó là biến toàn cục
-                id = 'builder-el-' + vueApp.elementCounter++; 
-                $clickedElement.attr('data-builder-id', id);
-                vueApp.refreshTree(); 
+            // Chỉ thực hiện khi iframe CÓ body (tức là sau khi đã write)
+            if ($iframeContents.find('body').length === 0) {
+                return;
             }
 
-            vueApp.selectElementFromIframe(this);
+            // 2. Tiêm CSS vào <head>
+            $iframeContents.find('head').append(`
+                <style>
+                    .builder-selected {
+                        outline: 2px dashed blue !important;
+                        box-shadow: 0 0 10px rgba(0,0,255,0.5);
+                    }
+                    body * { cursor: default !important; }
+                </style>
+            `);
+
+            // 3. Gắn listener click vào <body>
+            $iframeContents.find('body').on('click', '*', function(e) {
+                e.stopPropagation();
+                
+                const $clickedElement = $(this);
+                
+                $iframeContents.find('.builder-selected').removeClass('builder-selected');
+                $clickedElement.addClass('builder-selected');
+
+                let id = $clickedElement.attr('data-builder-id');
+                if (!id) {
+                    // Chúng ta dùng vueApp vì nó là biến toàn cục
+                    id = 'builder-el-' + vueApp.elementCounter++; 
+                    $clickedElement.attr('data-builder-id', id);
+                    vueApp.refreshTree(); 
+                }
+
+                vueApp.selectElementFromIframe(this);
+            });
+
+            // 4. Quét cây DOM (chỉ chạy khi load xong)
+            vueApp.refreshTree();
         });
 
-        // 4. Quét cây DOM (chỉ chạy khi load xong)
-        vueApp.refreshTree();
-    });
-
-    /**
-     * 5. TẢI FILE HTML...
-     */
-    $.get('template.html', function(htmlContent) {
         /**
-         * ... VÀ GHI TRỰC TIẾP VÀO IFRAME
-         * Đây là thay đổi quan trọng
+         * 5. TẢI FILE HTML...
          */
-        const iframeDoc = $iframe.contents()[0]; // Lấy document object
-        iframeDoc.open();
-        iframeDoc.write(htmlContent); // Ghi nội dung mới
-        iframeDoc.close(); // Đóng document, hành động này
-                           // SẼ KÍCH HOẠT SỰ KIỆN 'load' ở trên
-    });
+        $.get('template.html', function(htmlContent) {
+            const iframeDoc = $iframe.contents()[0]; 
+            iframeDoc.open();
+            iframeDoc.write(htmlContent); 
+            iframeDoc.close(); // Kích hoạt sự kiện 'load' ở trên
+        }).fail(function() {
+            console.error("Không thể tải template.html. Hãy đảm bảo file tồn tại và bạn đang chạy trên một web server.");
+        });
     });
 });
