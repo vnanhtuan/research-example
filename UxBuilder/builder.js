@@ -106,27 +106,34 @@ const app = Vue.createApp({
          * Thêm component (Row/Col) vào element đang chọn
          */
         addComponent(type) {
-            if (!this.selectedElementId) return;
+            if (!this.selectedElementId) {
+                alert("Bạn cần chọn một element trước!");
+                return;
+            }
 
             // Tìm element cha trong iframe
             const $parentElement = $('#canvas').contents().find(`[data-builder-id="${this.selectedElementId}"]`);
             if (!$parentElement.length) return;
 
-            // Tạo HTML cho component mới
-            let newHtml = '';
-            const newId = 'builder-el-' + this.elementCounter++;
-
-            if (type === 'row') {
-                newHtml = `<div class="row" data-builder-id="${newId}">Row mới</div>`;
-            } else if (type === 'col') {
-                newHtml = `<div class="col" data-builder-id="${newId}">Col mới</div>`;
+            console.log('test', typeof Components[type]);
+            if (typeof Components[type] !== 'function') {
+                console.error(`Component '${type}' không được định nghĩa trong components.js`);
+                return;
             }
+
+            // Tạo HTML cho component mới
+            const newId = 'builder-el-' + this.elementCounter++;
+            const newHtml = Components[type](newId);
+
 
             // Dùng jQuery để chèn HTML vào iframe
             $parentElement.append(newHtml);
 
             // Sau khi chèn, build lại cây
             this.refreshTree();
+
+            const newNode = { id: newId, tag: 'div' }; 
+            this.selectElementFromTree(newNode);
         }
     }
 });
@@ -230,51 +237,5 @@ $(document).ready(function() {
         iframeDoc.close(); // Đóng document, hành động này
                            // SẼ KÍCH HOẠT SỰ KIỆN 'load' ở trên
     });
-        
-        // Cần chờ iframe load xong
-        //$iframe.on('load', function() {
-        //    const $iframeContents = $iframe.contents();
-
-        //    console.log('test', iframeContents);
-            
-        //    // 2. Tiêm CSS highlight vào iframe
-        //    //$iframeContents.find('head').append(`
-        //    //    <style>
-        //    //        .builder-selected {
-        //    //            outline: 2px dashed blue !important;
-        //    //            box-shadow: 0 0 10px rgba(0,0,255,0.5);
-        //    //        }
-        //    //        /* Ngăn con trỏ chuột thay đổi khi hover */
-        //    //        body * { cursor: default !important; }
-        //    //    </style>
-        //    //`);
-
-        //    // 3. Xây dựng cây lần đầu tiên
-        //    vueApp.refreshTree();
-
-        //    // 4. Bắt sự kiện click BÊN TRONG iframe
-        //    //$iframeContents.find('body').on('click', '*', function(e) {
-        //    //     Ngăn sự kiện nổi bọt (để không chọn cả cha lẫn con)
-        //    //    e.stopPropagation();
-                
-        //    //    const $clickedElement = $(this);
-                
-        //    //     Highlight
-        //    //    $iframeContents.find('.builder-selected').removeClass('builder-selected');
-        //    //    $clickedElement.addClass('builder-selected');
-
-        //    //     Lấy ID (hoặc tạo mới nếu chưa có)
-        //    //    let id = $clickedElement.attr('data-builder-id');
-        //    //    if (!id) {
-        //    //        id = 'builder-el-' + app.elementCounter++;
-        //    //        $clickedElement.attr('data-builder-id', id);
-        //    //         Nếu là element mới, build lại cây
-        //    //        app.refreshTree();
-        //    //    }
-
-        //    //     5. Thông báo cho Vue app biết element nào được chọn
-        //    //    vueApp.selectElementFromIframe(this);
-        //    //});
-        //});
     });
 });

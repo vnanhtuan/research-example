@@ -10,7 +10,7 @@ const Components = {
     'row': function(newId) {
         // Bạn có thể tùy chỉnh HTML phức tạp tùy ý ở đây
         return `
-            <div class_name="row" data-builder-id="${newId}">
+            <div class="row" data-builder-id="${newId}">
                 <p>Row mới - Hãy thêm Col vào đây</p>
             </div>
         `;
@@ -21,7 +21,7 @@ const Components = {
      */
     'col': function(newId) {
         return `
-            <div class_name="col" data-builder-id="${newId}">
+            <div class="col" data-builder-id="${newId}">
                 <p>Col mới</p>
             </div>
         `;
