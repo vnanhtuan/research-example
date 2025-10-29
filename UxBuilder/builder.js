@@ -11,13 +11,11 @@ const app = Vue.createApp({
             tree: [],
             selectedElementId: null,
             selectedElementTag: '',
-            elementCounter: 0
+            elementCounter: 0,
+            availableActions: []
         }
     },
     methods: {
-        /**
-         * Hàm đệ quy để build cây DOM từ 1 element
-         */
         buildTreeData(element) {
             const $el = $(element);
             
@@ -31,10 +29,12 @@ const app = Vue.createApp({
                 $el.attr('data-builder-id', id);
             }
 
+            const componentName = $el.attr('data-component-name');
+            const tagName = componentName ? componentName : element.tagName.toLowerCase();
             const node = {
                 id: id,
-                tag: element.tagName.toLowerCase(),
-                element: element, // Tham chiếu trực tiếp đến DOM element trong iframe
+                tag: tagName,
+                element: element,
                 selected: id === this.selectedElementId,
                 children: []
             };
@@ -59,6 +59,27 @@ const app = Vue.createApp({
         },
 
         /**
+         * Cap nhap actions cua inspector
+         */
+        updateInspectorActions(element) {
+            const $el = $(element);
+            const componentName = $el.attr('data-component-name');
+            
+            if (componentName && Components[componentName]) {
+                // Nếu là component (Row, Col), lấy actions của nó
+                this.availableActions = Components[componentName].actions;
+            } else if ($el.is('body')) {
+                // Nếu là body, chỉ cho thêm Row
+                this.availableActions = [
+                    { label: 'Thêm Container', type: 'ADD_CHILD', payload: 'container' }
+                ];
+            } else {
+                // Nếu là thẻ HTML (p, h1...), lấy actions 'default'
+                this.availableActions = Components['default'].actions;
+            }
+        },
+
+        /**
          * Được gọi khi click vào 1 node trên Tree View
          */
         selectElementFromTree(node) {
@@ -72,6 +93,9 @@ const app = Vue.createApp({
 
             // Cập nhật trạng thái 'selected' cho tree
             this.updateTreeSelection(this.tree, node.id);
+
+            // Cập nhật Inspector (dùng .element đã lưu)
+            this.updateInspectorActions(node.element);
         },
 
         /**
@@ -84,9 +108,13 @@ const app = Vue.createApp({
             
             if (id) {
                 this.selectedElementId = id;
-                this.selectedElementTag = $el.prop('tagName').toLowerCase();
+                this.selectedElementTag = $el.attr('data-component-name') || $el.prop('tagName').toLowerCase();
+
                 // Cập nhật trạng thái 'selected' cho tree
                 this.updateTreeSelection(this.tree, id);
+
+                // Cập nhật Inspector
+                this.updateInspectorActions(element);
             }
         },
 
@@ -102,38 +130,53 @@ const app = Vue.createApp({
             });
         },
 
-        /**
-         * Thêm component (Row/Col) vào element đang chọn
-         */
-        addComponent(type) {
-            if (!this.selectedElementId) {
-                alert("Bạn cần chọn một element trước!");
+        executeAction(action) {
+            // 1. Tìm element mục tiêu
+            const $target = $('#canvas').contents().find(`[data-builder-id="${this.selectedElementId}"]`);
+            if (!$target.length) return;
+
+            // 2. Lấy thông tin component mới
+            const newType = action.payload; // 'row' hoặc 'col'
+            if (typeof Components[newType]?.getHtml !== 'function') {
+                console.error(`Component '${newType}' không có hàm getHtml`);
                 return;
             }
-
-            // Tìm element cha trong iframe
-            const $parentElement = $('#canvas').contents().find(`[data-builder-id="${this.selectedElementId}"]`);
-            if (!$parentElement.length) return;
-
-            console.log('test', typeof Components[type]);
-            if (typeof Components[type] !== 'function') {
-                console.error(`Component '${type}' không được định nghĩa trong components.js`);
-                return;
-            }
-
-            // Tạo HTML cho component mới
+            
+            // 3. Tạo HTML
             const newId = 'builder-el-' + this.elementCounter++;
-            const newHtml = Components[type](newId);
+            const newHtml = Components[newType].getHtml(newId);
 
-
-            // Dùng jQuery để chèn HTML vào iframe
-            $parentElement.append(newHtml);
-
-            // Sau khi chèn, build lại cây
+            // 4. Thực thi hành động dựa trên 'type'
+            switch (action.type) {
+                case 'ADD_CHILD':
+                    $target.append(newHtml);
+                    break;
+                case 'ADD_SIBLING_BEFORE':
+                    $target.before(newHtml);
+                    break;
+                case 'ADD_SIBLING_AFTER':
+                    $target.after(newHtml);
+                    break;
+                default:
+                    console.error("Hành động không xác định:", action.type);
+            }
+            
+            // 5. Cập nhật Tree View
             this.refreshTree();
-
-            const newNode = { id: newId, tag: 'div' }; 
-            this.selectElementFromTree(newNode);
+            
+            // 6. (Tùy chọn) Chọn component vừa mới tạo
+            const newElement = $('#canvas').contents().find(`[data-builder-id="${newId}"]`)[0];
+            if (newElement) {
+                // Giả lập một "node" object để truyền đi
+                const newNode = {
+                    id: newId,
+                    tag: newType,
+                    element: newElement
+                };
+                this.selectElementFromTree(newNode);
+                // Đảm bảo nó được highlight
+                $(newElement).addClass('builder-selected');
+            }
         }
     }
 });
@@ -204,67 +247,52 @@ vueApp = app.mount('#builder-ui');
 // ===================================
 $(document).ready(function() {
     const $iframe = $('#canvas');
-    
-    // 1. Load file template.html vào iframe
-    $.get('template.html', function(htmlContent) {
-        /**
-         * 1. HÀM NÀY SẼ CHẠY KHI IFRAME LOAD XONG
-         * (Nó sẽ chạy 2 LẦN: một lần cho 'about:blank' và
-         * một lần sau khi chúng ta 'document.write' xong)
-         */
-        $iframe.on('load', function() {
-            const $iframeContents = $iframe.contents();
 
-            // Chỉ thực hiện khi iframe CÓ body (tức là sau khi đã write)
-            if ($iframeContents.find('body').length === 0) {
-                return;
-            }
+    $iframe.on('load', function() {
+        const $iframeContents = $iframe.contents();
+        const $body = $iframeContents.find('body');
+        if ($body.length === 0) return;
 
-            // 2. Tiêm CSS vào <head>
-            $iframeContents.find('head').append(`
-                <style>
-                    .builder-selected {
-                        outline: 2px dashed blue !important;
-                        box-shadow: 0 0 10px rgba(0,0,255,0.5);
-                    }
-                    body * { cursor: default !important; }
-                </style>
-            `);
-
-            // 3. Gắn listener click vào <body>
-            $iframeContents.find('body').on('click', '*', function(e) {
-                e.stopPropagation();
-                
-                const $clickedElement = $(this);
-                
-                $iframeContents.find('.builder-selected').removeClass('builder-selected');
-                $clickedElement.addClass('builder-selected');
-
-                let id = $clickedElement.attr('data-builder-id');
-                if (!id) {
-                    // Chúng ta dùng vueApp vì nó là biến toàn cục
-                    id = 'builder-el-' + vueApp.elementCounter++; 
-                    $clickedElement.attr('data-builder-id', id);
-                    vueApp.refreshTree(); 
+        // Tiêm CSS
+        $iframeContents.find('head').append(`
+            <style>
+                .builder-selected {
+                    outline: 2px dashed blue !important;
+                    box-shadow: 0 0 10px rgba(0,0,255,0.5);
                 }
+                body * { cursor: default !important; }
+            </style>
+        `);
 
-                vueApp.selectElementFromIframe(this);
-            });
+        // Gắn listener click (để chọn)
+        $body.on('click', '*', function(e) {
+            e.stopPropagation();
+            
+            const $clickedElement = $(this);
+            $iframeContents.find('.builder-selected').removeClass('builder-selected');
+            $clickedElement.addClass('builder-selected');
 
-            // 4. Quét cây DOM (chỉ chạy khi load xong)
-            vueApp.refreshTree();
+            let id = $clickedElement.attr('data-builder-id');
+            if (!id) {
+                id = 'builder-el-' + vueApp.elementCounter++;
+                $clickedElement.attr('data-builder-id', id);
+                vueApp.refreshTree(); 
+            }
+            vueApp.selectElementFromIframe(this);
         });
+        
+        // --- TOÀN BỘ LOGIC mousemove VÀ ADDER ĐÃ BỊ XÓA ---
+        
+        vueApp.refreshTree();
+    });
 
-        /**
-         * 5. TẢI FILE HTML...
-         */
-        $.get('template.html', function(htmlContent) {
-            const iframeDoc = $iframe.contents()[0]; 
-            iframeDoc.open();
-            iframeDoc.write(htmlContent); 
-            iframeDoc.close(); // Kích hoạt sự kiện 'load' ở trên
-        }).fail(function() {
-            console.error("Không thể tải template.html. Hãy đảm bảo file tồn tại và bạn đang chạy trên một web server.");
-        });
+    // Tải template (giữ nguyên)
+    $.get('template.html', function(htmlContent) {
+        const iframeDoc = $iframe.contents()[0]; 
+        iframeDoc.open();
+        iframeDoc.write(htmlContent); 
+        iframeDoc.close(); 
+    }).fail(function() {
+        console.error("Không thể tải template.html.");
     });
 });
