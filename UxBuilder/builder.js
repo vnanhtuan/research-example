@@ -77,6 +77,7 @@ const app = Vue.createApp({
         /**
          * Được gọi từ bên ngoài (jQuery) khi click vào element trong iframe
          */
+        
         selectElementFromIframe(element) {
             const $el = $(element);
             const id = $el.attr('data-builder-id');
