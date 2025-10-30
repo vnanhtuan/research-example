@@ -1,3 +1,4 @@
+/* builder.css */
 body {
     display: flex;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -9,62 +10,76 @@ body {
 
 /* Cột bên trái (UI Builder) */
 #builder-ui {
-    width: 300px;
-    min-width: 250px;
-    background-color: #ffffff;
-    border-right: 1px solid #dcdcdc;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+    width: 300px; 
+    flex-shrink: 0; 
+    overflow-y: auto; 
+    border-right: 1px solid #ccc; 
+    background: #f9f9f9;
+    z-index: 100;
 }
 
 /* Phần Tree View */
 #tree-view-wrapper {
-    flex: 1; /* Cho phép co giãn */
-    overflow-y: auto; /* Thêm thanh cuộn khi cần */
+    flex: 1;
+    overflow-y: auto;
     padding: 10px;
     border-bottom: 1px solid #eee;
 }
-
-#tree-view-wrapper h3 {
-    margin-top: 0;
-}
+#tree-view-wrapper h3 { margin-top: 0; }
 
 /* Phần Inspector */
 #inspector {
     padding: 15px;
     background-color: #fdfdfd;
 }
-
 #inspector p {
     font-size: 14px;
     color: #333;
     margin-top: 0;
     word-break: break-all;
 }
+#inspector small {
+    color: #666;
+}
 
-#inspector button {
+/* CSS cho các nút hành động */
+.action-button {
     background-color: #007bff;
     color: white;
     border: none;
     padding: 8px 12px;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 5px;
+    margin-bottom: 5px;
     font-size: 14px;
+    display: block;
+    width: 100%;
+    text-align: left;
 }
+.action-button:hover { background-color: #0056b3; }
+.action-button-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 13px;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+.action-button-cancel:hover { background-color: #5a6268; }
 
-#inspector button:hover {
-    background-color: #0056b3;
-}
 
 /* Vùng Iframe */
 #canvas-wrapper {
     flex: 1;
     height: 100vh;
     overflow: hidden;
+    position: relative; /* Cho phép adder định vị */
 }
-
 #canvas {
     width: 100%;
     height: 100%;
@@ -72,11 +87,45 @@ body {
     background-color: white;
 }
 
-/* === CSS CHO TREE NODE (Mới) === */
-.tree-node {
-    font-size: 14px;
+/* === CSS CHO CÁC NÚT ADDER LƠ LỬNG === */
+.adder-btn {
+    position: fixed; /* Lơ lửng trên toàn trang */
+    z-index: 50; /* Nằm trên iframe nhưng dưới UI */
+    width: 24px;
+    height: 24px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 24px;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    display: none; /* Ẩn mặc định, Vue sẽ .show() */
+}
+.adder-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+/* Các ID này chỉ để phân biệt, logic vị trí do JS xử lý */
+#adder-top { /* ... */ }
+#adder-bottom { /* ... */ }
+#adder-left { /* ... */ }
+#adder-right { /* ... */ }
+#adder-inside { 
+    background-color: #28a745; /* Màu xanh lá cho "bên trong" */
+}
+#adder-inside:hover {
+    background-color: #218838;
 }
 
+
+/* === CSS CHO TREE NODE (Giữ nguyên) === */
+.tree-node { font-size: 14px; }
 .node-content {
     display: flex;
     align-items: center;
@@ -84,17 +133,11 @@ body {
     border-radius: 4px;
     cursor: pointer;
 }
-
-.node-content:hover {
-    background-color: #f0f0f0;
-}
-
-/* CSS cho node đang được chọn */
+.node-content:hover { background-color: #f0f0f0; }
 .node-content.selected {
     background-color: #cce5ff;
     border: 1px solid #b8daff;
 }
-
 .toggle-icon {
     width: 20px;
     display: inline-block;
@@ -103,14 +146,10 @@ body {
     font-weight: bold;
     color: #666;
 }
-
-.node-label {
-    margin-left: 4px;
-}
-
+.node-label { margin-left: 4px; }
 .node-children {
-    /* Vùng con sẽ được thụt vào */
     margin-left: 20px;
     border-left: 1px dashed #ccc;
     padding-left: 10px;
 }
+

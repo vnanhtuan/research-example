@@ -38,6 +38,21 @@ const Components = {
                 label: 'Thêm Col (bên trong)',
                 type: 'ADD_CHILD',
                 payload: 'col'
+            },
+            { 
+                label: 'Thêm Row (bên trong)',
+                type: 'ADD_CHILD',
+                payload: 'row'
+            },
+            { 
+                label: 'Thêm Row (phía trên)',
+                type: 'ADD_SIBLING_BEFORE',
+                payload: 'row'
+            },
+            { 
+                label: 'Thêm Row (phía dưới)',
+                type: 'ADD_SIBLING_AFTER',
+                payload: 'row'
             }
         ]
     },
