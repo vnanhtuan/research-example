@@ -13,19 +13,58 @@
 
 <body>
     <div id="app-root" style="display: flex; height: 100vh;">
-        <div id="builder-ui">
-            <div id="tree-view-wrapper">
+        <div id="builder-ui">            <div id="tree-view-wrapper">
                 <h3>Tree View</h3>
                 <div id="tree-view">
                     <tree-node v-for="node in tree" :key="node.id" :node="node" @node-selected="selectElementFromTree">
                     </tree-node>
                 </div>
+                
+                <!-- Save Template Button -->
+                <div class="save-section" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
+                    <button @click="saveTemplate" class="btn btn-success btn-sm">
+                        💾 Save Template
+                    </button>
+                </div>
             </div>
 
-            <hr>
-
-            <div id="inspector" v-if="selectedElementId">
+            <hr>            <div id="inspector" v-if="selectedElementId">
                 <p>Đang chọn: &lt;{{ selectedElementTag }}&gt;</p>
+
+                <!-- Properties Editor -->
+                <div v-if="availableProperties.length > 0 && !selectedLocation" class="properties-editor">
+                    <h4>Properties</h4>
+                    <div v-for="property in availableProperties" :key="property.name" class="property-item">
+                        <label :for="'prop-' + property.name">{{ property.label }}:</label>
+                        
+                        <!-- Color Input -->
+                        <input v-if="property.type === 'color'" 
+                               :id="'prop-' + property.name"
+                               type="color" 
+                               :value="currentProperties[property.name] || property.defaultValue"
+                               @input="updateProperty(property.name, $event.target.value)"
+                               class="property-input">
+                          <!-- Number Input -->
+                        <input v-else-if="property.type === 'number'" 
+                               :id="'prop-' + property.name"
+                               type="number" 
+                               :value="currentProperties[property.name] || property.defaultValue"
+                               :min="property.min"
+                               :max="property.max"
+                               @input="updateProperty(property.name, $event.target.value)"
+                               class="property-input"
+                               :placeholder="property.name === 'fontSize' ? 'Font size (px)' : ''">
+                        
+                        <!-- Text Input (default) -->
+                        <input v-else 
+                               :id="'prop-' + property.name"
+                               type="text" 
+                               :value="currentProperties[property.name] || property.defaultValue"
+                               @input="updateProperty(property.name, $event.target.value)"
+                               class="property-input">
+                    </div>
+                    <hr>
+                </div>
 
                 <!-- Click '+' -->
                 <div v-if="selectedLocation">
@@ -73,9 +112,9 @@
 
     <div id="canvas-wrapper">
         <iframe id="canvas"></iframe>
-    </div>
-    <script src="components.js"></script>
-    <script src="builder.js"></script>
+    </div>    <script src="components.js"></script>
+    <script src="vue-app.js"></script>
+    <script src="jquery-handlers.js"></script>
 </body>
 
 </html>

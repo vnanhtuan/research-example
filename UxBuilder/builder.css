@@ -153,3 +153,74 @@ body {
     padding-left: 10px;
 }
 
+/* === CSS CHO PROPERTIES EDITOR === */
+.properties-editor {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+}
+
+.properties-editor h4 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.property-item {
+    margin-bottom: 10px;
+}
+
+.property-item label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.property-input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+.property-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.property-input[type="color"] {
+    height: 30px;
+    padding: 2px;
+    cursor: pointer;
+}
+
+.property-input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.property-input[type="number"]::-webkit-outer-spin-button,
+.property-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Save Template Button */
+.save-section {
+    text-align: center;
+}
+
+.save-section button {
+    width: 100%;
+    font-size: 12px;
+    padding: 8px 12px;
+}
+
